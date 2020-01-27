@@ -436,6 +436,10 @@ func nullString(in []byte) []byte {
 	rv.WriteByte('"')
 	for _, b := range in {
 		if unicode.IsPrint(rune(b)) {
+			switch rune(b) {
+			case '"', '\\', '\b', '\f', '\n', '\r', '\t', '\v', '\a':
+				rv.WriteByte('\\')
+			}
 			rv.WriteByte(b)
 		}
 	}
