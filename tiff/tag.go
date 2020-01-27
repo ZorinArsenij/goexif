@@ -3,13 +3,12 @@ package tiff
 import (
 	"bytes"
 	"encoding/binary"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"math/big"
 	"strings"
-	"unicode"
-	"unicode/utf8"
 )
 
 // Format specifies the Go type equivalent used to represent the basic
@@ -409,7 +408,12 @@ func (t *Tag) String() string {
 func (t *Tag) MarshalJSON() ([]byte, error) {
 	switch t.format {
 	case StringVal, UndefVal:
-		return nullString(t.Val), nil
+		j, err := json.Marshal(string(nullString(t.Val)))
+		if err != nil {
+			return nil, err
+		}
+
+		return j, nil
 	case OtherVal:
 		return []byte(fmt.Sprintf("unknown tag type '%v'", t.Type)), nil
 	}
@@ -432,23 +436,11 @@ func (t *Tag) MarshalJSON() ([]byte, error) {
 }
 
 func nullString(in []byte) []byte {
-	rv := bytes.Buffer{}
-	rv.WriteByte('"')
-	for _, b := range in {
-		if unicode.IsPrint(rune(b)) {
-			switch rune(b) {
-			case '"', '\\', '\b', '\f', '\n', '\r', '\t', '\v', '\a':
-				rv.WriteByte('\\')
-			}
-			rv.WriteByte(b)
-		}
+	if in[len(in)-1] == '\000' {
+		return in[:len(in)-1]
 	}
-	rv.WriteByte('"')
-	rvb := rv.Bytes()
-	if utf8.Valid(rvb) {
-		return rvb
-	}
-	return []byte(`""`)
+
+	return in
 }
 
 type wrongFmtErr struct {
