@@ -436,7 +436,7 @@ func (t *Tag) MarshalJSON() ([]byte, error) {
 }
 
 func nullString(in []byte) []byte {
-	if in[len(in)-1] == '\000' {
+	if len(in) > 0 && in[len(in)-1] == '\000' {
 		return in[:len(in)-1]
 	}
 
