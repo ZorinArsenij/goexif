@@ -275,6 +275,11 @@ func Decode(r io.Reader) (*Exif, error) {
 		if err != nil {
 			return nil, err
 		}
+
+		if sec == nil {
+			return nil, nil
+		}
+
 		// Strip away EXIF header.
 		er, err = sec.exifReader()
 		if err != nil {
@@ -600,6 +605,10 @@ func newAppSec(marker byte, r io.Reader) (*appSec, error) {
 	// seek to marker
 	for dataLen == 0 {
 		if _, err := br.ReadBytes(0xFF); err != nil {
+			if err == io.EOF {
+				return nil, nil
+			}
+
 			return nil, err
 		}
 		c, err := br.ReadByte()
